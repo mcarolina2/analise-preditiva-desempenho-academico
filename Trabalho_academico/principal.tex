@@ -1,0 +1,124 @@
+\input{config/documento}
+
+\title{Predição de desempenho acadêmico a partir do ecossistema de aprendizagem: aluno, professor e currículo como preditores de sucesso no EBTT-UFPB}
+
+\def\autorA{BIANCA MARIA SOUZA PEDROSA\\
+\texttt{bias.marias.ss.pp@gmail.com}}
+
+\def\autorB{ ISABELLY RODRIGUES DO REGO SILVA \\
+\texttt{isabelly.rodrigues@academico.ufpb.br}}
+
+\def\autorC{ MARIA CAROLINA DE FRAGA\\
+\texttt{mcf2@academico.ufpb.br}}
+
+
+\begin{document}
+\input{config/pretextual}
+
+\chapter{Introdução}
+%
+A expansão da Rede Federal de Educação Profissional, Científica e Tecnológica nas últimas décadas representou um avanço significativo na oferta de formação técnica no Brasil. Com a criação dos Institutos Federais pela Lei nº 11.892/2008 e a manutenção das Escolas Técnicas Vinculadas às Universidades Federais, o país consolidou uma estrutura plural e capilarizada de educação profissional, voltada não apenas à qualificação da mão de obra, mas também à inclusão social e ao desenvolvimento regional (MEC, 2008). No âmbito da Universidade Federal da Paraíba (UFPB), o Ensino Básico, Técnico e Tecnológico — EBTT — é operacionalizado por três unidades: o Colégio de Aplicação (CApEBas), o Colégio Agrícola Vidal de Negreiros (CAVN) e o Centro Profissional Tecnológico — Escola Técnica de Saúde (CPT-ETS), que juntos reúnem 131 docentes, 47 cursos e mais de 15.000 matrículas ativas (Plataforma Nilo Peçanha, 2024).
+Apesar desse expressivo alcance, a qualidade dos indicadores de permanência e êxito ainda representa um desafio central para a gestão dessas instituições. Elevadas taxas de retenção e reprovação comprometem a trajetória formativa dos estudantes, geram perdas institucionais e contradizem a missão inclusiva da educação profissional pública (INEP, 2012). A retenção, em particular, é frequentemente invisível nas estatísticas agregadas, mas se manifesta de forma concentrada em disciplinas específicas que funcionam como verdadeiros gargalos ao longo do percurso curricular.
+	
+	%Exemplos de citação:
+	
+	\begin{itemize}
+		\item De acordo com \cite{Almeida2019} e \cite{Silva2019}, o Brasil...
+		\item O Programa Farmácia Popular do Brasil visa aumentar o acesso a medicamentos para doentes crônicos no país, usando especialmente a rede conveniada ao programa \citep{Almeida2019}.
+	\end{itemize}
+
+
+
+
+
+    
+%Texto 
+\section{Objetivos}
+Este projeto tem como objetivo desenvolver um modelo de machine learning capaz de **predizer o desempenho acadêmico dos discentes no âmbito do EBTT-UFPB**, considerando o ecossistema de aprendizagem composto por três dimensões principais: aluno, professor e currículo.
+
+Trata-se de um problema de **classificação**, no qual se busca identificar padrões que permitam classificar os estudantes quanto ao seu desempenho acadêmico (por exemplo, aprovação ou reprovação em componentes curriculares).
+
+Para isso, foram integradas diferentes bases de dados institucionais, incluindo:
+\begin{itemize}
+    \item Informações dos discentes (perfil acadêmico e histórico)
+    \item Dados de matrículas (trajetória acadêmica)
+    \item Componentes curriculares (estrutura das disciplinas)
+    \item Cursos (organização curricular)
+    \item Docentes (características dos professores)
+\end{itemize}
+
+
+
+\chapter{Metodologia}
+A metodologia adotada neste estudo foi estruturada em um notebook computacional, organizado de forma sequencial, com o objetivo de garantir a reprodutibilidade e a clareza das etapas analíticas. Inicialmente, realizou-se a configuração do ambiente computacional, seguida pelo carregamento e pela inspeção preliminar dos dados. Posteriormente, procedeu-se à integração e consolidação das bases de dados utilizadas. Em seguida, foi definida a variável-alvo do estudo, etapa fundamental para o direcionamento das análises. Na sequência, conduziu-se a análise exploratória dos dados, com vistas à compreensão de padrões, distribuição das variáveis e identificação de possíveis inconsistências. Após essa etapa, realizou-se o pré-processamento dos dados, aliado à engenharia de atributos, visando à preparação adequada das variáveis para a modelagem. Na etapa subsequente, foram desenvolvidos modelos de aprendizagem supervisionada, os quais foram posteriormente avaliados e comparados com base em métricas de desempenho previamente definidas. Adicionalmente, procedeu-se à análise de interpretabilidade dos modelos, com o intuito de compreender a influência das variáveis nos resultados obtidos. Por fim, foram sistematizadas as conclusões parciais e indicadas possibilidades de continuidade do estudo.
+
+
+\section{Dados}
+Os dados sao provenientes do SIGAA (Sistema Integrado de Gestao de Atividades Academicas) da UFPB, exportados em formato Apache Parquet. Os cinco conjuntos de dados, apos carregamento no ambiente Google Colab, apresentaram os seguintes volumes:
+(OBS: Após a integracao das cinco tabelas por chaves relacionais, o dataset final consolidado contou com 426.780 linhas x 34 colunas. Aplicado o filtro de situacoes finais (exclusao de 'MATRICULADO', 'EXCLUIDA' e 'INDEFERIDO'), o dataset de modelagem ficou com 382.239 registros.)
+
+\begin{table}[h]
+\centering
+\caption{Informações sobre os dados utilizados}
+\begin{tabular}{|c|c|c|c|}
+\hline
+Arquivo & Linhas & Colunas & Descrição \\ 
+\hline
+discentes.parquet & 7.707 & 21 & Perfil socioeconomico e academico dos alunos \\
+docentes.parquet & 348 & 11 & Corpo docente EBTT com vínculo e lotacao \\
+matriculas.parquet & 426.753 & 5 & Registro historico de matriculas por componente \\
+componentes.parquet & 998 & 22 & Componentes curriculares com cargas horarias \\
+cursos.parquet & 1.310 & 19 & Estrutura curricular dos cursos ofertados \\ 
+\hline
+\end{tabular}
+\label{tab:exemplo}
+\end{table}
+
+\section{Relacionamento}
+\begin{itemize}
+    \item matriculas.id_discente -> discentes.id_discente (perfil do aluno)
+    \item matriculas.id_disciplina -> componentes.id_disciplina (estrutura curricular)
+    \item componentes.sigla_departamento -> docentes (agregado por departamento — 44 departamentos mapeados)
+    \item componentes.id_disciplina -> cursos.id_disciplina (informacoes do curso)
+\end{itemize}
+
+\begin{table}[h]
+\centering
+\caption{Informações sobre os dados utilizados}
+\begin{tabular}{|c|c|c|L{10cm}|}
+\hline
+Dimensão & Variável & Tipo & Descrição \\ 
+\hline
+Aluno & sexo & Categorica & Sexo declarado do discente \\ 
+Aluno & raca_declarada & Categorica & Raca/cor autodeclarada \\ 
+Aluno & faixa_renda_familiar & Categorica ord. & Faixa de renda familiar \\ 
+Aluno & forma_ingresso & Categorica & Como o aluno ingressou no curso \\ 
+Aluno & ch_integralizada & Numerica & CH ja cumprida — preditor mais forte (imp. 0.3767) \\ 
+Aluno & ch_pendente & Numerica & CH ainda a cumprir (imp. 0.1062) \\ 
+Aluno & progresso_academico & Numerica & Feature derivada: ch_integralizada / (ch_integralizada + ch_pendente + 1) — imp. 0.1707 \\ 
+Curriculo & ch_total & Numerica & Carga horaria total do componente (imp. 0.0456) \\ 
+Curriculo & ch_ead & Numerica & Carga horaria em modalidade EaD \\ 
+Curriculo & nivel_componente_curricular & Categorica & Nivel (Tecnico, FIC, pos-tecnico) \\ 
+Curriculo & qtd_max_matriculas & Numerica & Vagas maximas por turma \\ 
+Professor & prop_efetivo & Numerica & Proporcao de docentes efetivos no depto. \\ 
+Professor & ano_admissao_medio & Numerica & Ano medio de admissao dos docentes do depto. \\ 
+Professor & total_docentes & Numerica & Total de docentes no departamento \\ 
+
+\hline
+\end{tabular}
+\label{tab:exemplo}
+\end{table}
+
+
+
+\section{Método}
+Descrever as variáveis utilizadas, período de análise, abrangência territorial do estudo, tamanho da amostra e as fontes de dados, bem como apresentar uma tabela com uma sumarização estatística das variáveis usadas (média, desvio-padrão, mínimo, máximo).
+
+\chapter{Resultados}
+Apresentar os achados do trabalho a fim de responder o problema fundamental de pesquisa.
+
+\chapter{Conclusões}
+Informar neste capítulo as principais considerações da pesquisa: resultados-chave, limitações, perspectivas futuras de trabalhos relacionados ao tema...
+
+\bibliography{referencias}
+\end{document}
