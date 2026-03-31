@@ -18,3 +18,25 @@ Execute na ordem:
 Para regenerar os três arquivos a partir do notebook monolítico: `python scripts/split_notebooks.py`
 
 O arquivo único `ebtt_analise_preditiva_v2 (1).ipynb` permanece como referência consolidada.
+
+## Dashboard analítico
+
+Foi adicionado um dashboard em Streamlit para análise de aprovações, reprovações e risco:
+
+- Arquivo: `dashboard_analitico.py`
+- Fonte de dados: `dados/saida_analise_risco_modelo.csv`
+
+Principais visões do painel:
+
+- Disciplinas críticas (retenção, risco médio, alto risco).
+- Áreas de conhecimento com maior falha no primeiro período e nos períodos seguintes.
+- Disciplinas com maior impacto potencial em cancelamento (proxy analítico).
+- Perfil do aluno (geral, aprovados e reprovados).
+- Matriz de confusão e distribuição de risco do modelo.
+
+Como executar:
+
+1. Instale as dependências:
+   - `pip install -r requirements.txt`
+2. Execute o dashboard:
+   - `streamlit run dashboard_analitico.py`
