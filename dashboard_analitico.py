@@ -1,5 +1,7 @@
 """
-Dashboard Streamlit — foco em previsao de risco por disciplina e periodo.
+Dashboard Streamlit — pagina principal: previsao de risco por disciplina e periodo.
+
+Outras paginas: `pages/1_Visao_geral.py`, `pages/2_Alunos_em_risco.py`.
 
 Pre-requisito:
     python calcular_features_dashboard.py
@@ -7,33 +9,18 @@ Pre-requisito:
 
 from __future__ import annotations
 
-from pathlib import Path
-
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
 import streamlit as st
 
-BASE_CSV = Path("dados/base_dashboard_risco.csv")
-BASE_PARQUET = Path("dados/base_dashboard_risco.parquet")
+from dashboard_io import BASE_CSV, BASE_PARQUET, load_base
 
 # Estilo graficos
 sns.set_theme(style="whitegrid", context="notebook")
 plt.rcParams["figure.figsize"] = (10, 5)
 plt.rcParams["axes.titlesize"] = 12
-
-
-@st.cache_data(show_spinner=False)
-def load_base() -> pd.DataFrame:
-    if BASE_PARQUET.exists():
-        try:
-            return pd.read_parquet(BASE_PARQUET, engine="fastparquet")
-        except Exception:
-            pass
-    if BASE_CSV.exists():
-        return pd.read_csv(BASE_CSV, low_memory=False)
-    raise FileNotFoundError(f"Nem {BASE_PARQUET} nem {BASE_CSV} encontrados.")
 
 
 def sidebar_filtros(df: pd.DataFrame) -> tuple[pd.DataFrame, int]:
