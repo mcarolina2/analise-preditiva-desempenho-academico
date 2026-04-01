@@ -9,6 +9,9 @@ import numpy as np
 import pandas as pd
 import seaborn as sns
 import streamlit as st
+import plotly.graph_objects as go
+import plotly.express as px
+
 
 from dashboard_io import BASE_CSV, BASE_PARQUET, load_base
 
@@ -108,27 +111,49 @@ else:
     if g.empty:
         st.info("Sem dados agregados para o grafico de periodos.")
     else:
-        fig, ax1 = plt.subplots(figsize=(12, 4.5))
-        x = np.arange(len(g))
-        ax1.bar(x, g["n_matriculas"], color="steelblue", alpha=0.75, label="Matriculas")
-        ax1.set_ylabel("N. de matriculas")
-        ax1.set_xticks(x)
-        ax1.set_xticklabels(g["periodo_letivo"].astype(str), rotation=45, ha="right", fontsize=8)
-        ax1.set_xlabel("Periodo letivo")
+        fig = go.Figure()
 
-        ax2 = ax1.twinx()
-        ax2.plot(x, g["taxa_reprov"], color="darkred", marker="o", linewidth=2, markersize=5, label="Taxa reprov. (%)")
-        ax2.set_ylabel("Taxa de reprovacao (%)")
-        ymax = float(g["taxa_reprov"].max()) if len(g) else 5.0
-        ax2.set_ylim(0, max(ymax * 1.15, 5.0))
+        # Barras (matriculas)
+        fig.add_trace(go.Bar(
+            x=g["periodo_letivo"],
+            y=g["n_matriculas"],
+            name="Matriculas",
+            marker_color="steelblue"
+        ))
 
-        h1, l1 = ax1.get_legend_handles_labels()
-        h2, l2 = ax2.get_legend_handles_labels()
-        ax1.legend(h1 + h2, l1 + l2, loc="upper left", fontsize=8)
-        fig.tight_layout()
-        st.pyplot(fig)
-        plt.close(fig)
+        # Linha (taxa de reprovacao)
+        fig.add_trace(go.Scatter(
+            x=g["periodo_letivo"],
+            y=g["taxa_reprov"],
+            name="Taxa reprov. (%)",
+            mode="lines+markers",
+            marker=dict(color="darkred", size=8),
+            line=dict(color="darkred", width=2),
+            yaxis="y2"
+        ))
 
+        # Layout
+        fig.update_layout(
+            height=500,
+            yaxis=dict(
+                title="N. de matriculas",
+                showgrid=True
+            ),
+            yaxis2=dict(
+                title="Taxa de reprovacao (%)",
+                overlaying="y",
+                side="right",
+                showgrid=False,
+                range=[0, max(g["taxa_reprov"].max() * 1.15, 5.0)]
+            ),
+            xaxis=dict(
+                title="Periodo letivo",
+                tickangle=45
+            ),
+            legend=dict(x=0, y=1.1, orientation="h")
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
 st.divider()
 
 # --- Perfil: discente unico (primeira ocorrencia por id_discente) ---
@@ -166,11 +191,14 @@ with c1:
     if "sexo" in d_demo.columns:
         t_sexo = prop_table(d_demo["sexo"], "sexo")
         st.dataframe(t_sexo, use_container_width=True, hide_index=True)
-        fig, ax = plt.subplots(figsize=(5, 3.5))
-        ax.pie(t_sexo["quantidade"], labels=t_sexo["sexo"], autopct="%1.1f%%", startangle=90)
-        ax.set_title("Distribuicao por sexo")
-        st.pyplot(fig)
-        plt.close(fig)
+        fig = px.pie(
+        t_sexo,
+        values="quantidade",
+        names="sexo",
+        title="Distribuicao por sexo"
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
     else:
         st.info("Coluna `sexo` ausente.")
 
@@ -184,13 +212,15 @@ with c2:
         faixa = pd.cut(idade, bins=bins, labels=labels, right=True)
         t_id = prop_table(faixa.astype(str), "faixa_etaria")
         st.dataframe(t_id, use_container_width=True, hide_index=True)
-        fig, ax = plt.subplots(figsize=(6, 3.5))
-        sns.barplot(data=t_id, x="faixa_etaria", y="percentual", color="teal", ax=ax)
-        ax.set_xticklabels(ax.get_xticklabels(), rotation=35, ha="right", fontsize=8)
-        ax.set_ylabel("% dos discentes")
-        ax.set_xlabel("")
-        st.pyplot(fig)
-        plt.close(fig)
+        fig = px.bar(
+        t_id,
+        x="faixa_etaria",
+        y="percentual",
+        color="faixa_etaria",
+        title="Distribuicao por faixa etaria"
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
     else:
         st.info("Coluna `idade` ausente.")
 
@@ -227,9 +257,12 @@ if "raca_declarada" in d_demo.columns:
     with c_a:
         st.dataframe(t_r.head(25), use_container_width=True, hide_index=True)
     with c_b:
-        fig, ax = plt.subplots(figsize=(6, 4))
-        top = t_r.head(12)
-        sns.barplot(data=top, y="raca_declarada", x="percentual", color="coral", ax=ax)
-        ax.set_xlabel("% dos discentes")
-        st.pyplot(fig)
-        plt.close(fig)
+        fig = px.bar(
+        t_r.head(12),
+        y="raca_declarada",
+        x="percentual",
+        color="raca_declarada",
+        title="Distribuicao por raca"
+        )
+
+        st.plotly_chart(fig, use_container_width=True)

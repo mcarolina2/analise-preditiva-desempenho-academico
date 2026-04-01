@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import pandas as pd
 import streamlit as st
+import plotly.express as px
 
 from dashboard_io import BASE_CSV, BASE_PARQUET, load_base
 
@@ -97,6 +98,20 @@ cols_show = [c for c in cols_show if c in filt.columns]
 
 out = filt[cols_show].copy()
 out["id_discente"] = out["id_discente"].astype(str)
+
+def color_risco(val):
+    try:
+        val = float(val)
+    except:
+        return ""
+
+    if val >= 0.5:
+        return "background-color: #ff4d4d; color: white"
+    elif val >= 0.25:
+        return "background-color: #ffd966"
+    else:
+        return "background-color: #c6efce"
+
 if "p_risco_insucesso" in out.columns:
     out["p_risco_insucesso"] = out["p_risco_insucesso"].astype(float).round(4)
 
@@ -107,11 +122,12 @@ if len(out) and "p_risco_insucesso" in out.columns:
 else:
     m2.metric("Risco medio (lista)", "—")
 
-st.dataframe(out, use_container_width=True, hide_index=True, height=480)
-
 st.download_button(
     "Baixar CSV",
     data=out.to_csv(index=False).encode("utf-8-sig"),
     file_name="alunos_em_risco_filtrado.csv",
     mime="text/csv",
 )
+styled = out.style.map(color_risco, subset=["p_risco_insucesso"])
+
+st.dataframe(styled, use_container_width=True, hide_index=True, height=480)
